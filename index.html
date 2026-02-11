@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เกมจำลองเศรษฐศาสตร์การเมือง: เกาะมหาสนุก</title>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap');
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 { color: #2c3e50; margin-bottom: 10px; }
+        h2 { color: #34495e; font-size: 1.2rem; margin-bottom: 20px; }
+        
+        .step { display: none; }
+        .step.active { display: block; animation: fadeIn 0.5s; }
+
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-family: 'Sarabun', sans-serif;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+        button:hover { background-color: #2980b9; }
+        
+        .btn-secondary { background-color: #95a5a6; }
+        .btn-secondary:hover { background-color: #7f8c8d; }
+        
+        .btn-danger { background-color: #e74c3c; }
+        .btn-danger:hover { background-color: #c0392b; }
+
+        .member-list {
+            text-align: left;
+            margin-bottom: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .member-item {
+            background: #ecf0f1;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Card Selection */
+        .system-card {
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .system-card:hover { border-color: #3498db; background: #ebf5fb; }
+        .system-card h3 { margin: 0; }
+        .system-card p { font-size: 0.9rem; color: #7f8c8d; margin-top: 5px; }
+
+        /* Result Area */
+        #result-card {
+            background: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .bar-container {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            font-size: 0.85rem;
+        }
+        .name-label { width: 80px; text-align: right; margin-right: 10px; }
+        .bar-bg { flex-grow: 1; background: #ecf0f1; height: 20px; border-radius: 10px; overflow: hidden; }
+        .bar-fill { height: 100%; transition: width 1s; }
+        .wealth-val { width: 50px; text-align: left; margin-left: 10px; font-weight: bold; }
+
+        /* Crisis Alert */
+        .crisis-alert {
+            background-color: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="step-1" class="step active">
+        <h1>🏝️ เกาะมหาสนุก</h1>
+        <h2>สร้างทีมและระบุสมาชิก</h2>
+        <input type="text" id="group-name" placeholder="ชื่อกลุ่ม/ชื่อเกาะของคุณ">
+        
+        <div style="display: flex; gap: 5px;">
+            <input type="text" id="new-member" placeholder="ชื่อสมาชิก..." onkeypress="handleEnter(event)">
+            <button onclick="addMember()" style="width: auto;">+</button>
+        </div>
+
+        <div class="member-list" id="member-list-display">
+            </div>
+
+        <button onclick="goToStep2()">ถัดไป: เลือกระบอบเศรษฐกิจ</button>
+    </div>
+
+    <div id="step-2" class="step">
+        <h1>เลือกการบริหารทรัพยากร</h1>
+        <h2>กลุ่มของคุณได้รับโจทย์เป็นเกาะแบบไหน?</h2>
+        
+        <div class="system-card" onclick="startGame('market')">
+            <h3>🏙️ เกาะที่ 1: ตลาดเสรี (Market)</h3>
+            <p>มือใครยาวสาวได้สาวเอา รัฐไม่แทรกแซง</p>
+        </div>
+        <div class="system-card" onclick="startGame('command')">
+            <h3>🚩 เกาะที่ 2: วางแผนส่วนกลาง (Command)</h3>
+            <p>ทุกอย่างรวมกองกลาง แล้วหารเท่ากัน</p>
+        </div>
+        <div class="system-card" onclick="startGame('mixed')">
+            <h3>⚖️ เกาะที่ 3: ผสมผสาน (Mixed)</h3>
+            <p>เก็บภาษีคนรวย มาช่วยสวัสดิการคนจน</p>
+        </div>
+        
+        <button class="btn-secondary" onclick="backToStep1()">ย้อนกลับ</button>
+    </div>
+
+    <div id="step-3" class="step">
+        <h1>ผลการจำลองสถานการณ์</h1>
+        
+        <div id="result-card">
+            <h2 id="res-group-name" style="color:#2c3e50; border-bottom: 2px solid #3498db; padding-bottom:10px;"></h2>
+            <p><strong>ระบอบเศรษฐกิจ:</strong> <span id="res-system-name"></span></p>
+            
+            <div id="crisis-box" class="crisis-alert">
+                🔥 <strong>เกิดวิกฤตภัยธรรมชาติ!</strong><br>
+                ทรัพยากรบนเกาะหายไป และส่งผลกระทบต่อประชาชน...
+            </div>
+
+            <div id="chart-area" style="margin-top: 20px;">
+                </div>
+
+            <div style="margin-top: 20px; font-size: 0.9rem; background: #f9f9f9; padding: 10px; border-radius: 8px;">
+                <p>💰 ความมั่งคั่งรวม: <strong id="res-total"></strong></p>
+                <p>📉 ความเหลื่อมล้ำ (Gini): <strong id="res-gini"></strong> (ยิ่งสูงยิ่งเหลื่อมล้ำ)</p>
+                <p>😊 ดัชนีความสุข: <strong id="res-happiness"></strong></p>
+            </div>
+        </div>
+
+        <button class="btn-danger" onclick="downloadResult()">📸 ดาวน์โหลดผลสรุป (PNG)</button>
+        <button class="btn-secondary" onclick="location.reload()">🔄 เริ่มเกมใหม่</button>
+    </div>
+</div>
+
+<script>
+    let members = [];
+    let groupName = "";
+    
+    // --- Step 1 Logic ---
+    function handleEnter(e) {
+        if(e.key === 'Enter') addMember();
+    }
+
+    function addMember() {
+        const input = document.getElementById('new-member');
+        const name = input.value.trim();
+        if (name) {
+            members.push(name);
+            renderMembers();
+            input.value = '';
+            input.focus();
+        }
+    }
+
+    function renderMembers() {
+        const list = document.getElementById('member-list-display');
+        list.innerHTML = members.map((m, i) => 
+            `<div class="member-item"><span>${i+1}. ${m}</span> <span style="color:red; cursor:pointer;" onclick="removeMember(${i})">x</span></div>`
+        ).join('');
+    }
+
+    function removeMember(index) {
+        members.splice(index, 1);
+        renderMembers();
+    }
+
+    function goToStep2() {
+        groupName = document.getElementById('group-name').value;
+        if (!groupName || members.length < 2) {
+            alert("กรุณาใส่ชื่อกลุ่ม และสมาชิกอย่างน้อย 2 คน");
+            return;
+        }
+        document.getElementById('step-1').classList.remove('active');
+        document.getElementById('step-2').classList.add('active');
+    }
+
+    function backToStep1() {
+        document.getElementById('step-2').classList.remove('active');
+        document.getElementById('step-1').classList.add('active');
+    }
+
+    // --- Step 2 & 3 Logic (The Simulation) ---
+    function startGame(system) {
+        document.getElementById('step-2').classList.remove('active');
+        document.getElementById('step-3').classList.add('active');
+
+        // Logic การคำนวณเศรษฐศาสตร์ (Simulation)
+        let results = [];
+        let systemName = "";
+        let baseWealth = 100; // ทรัพยากรเริ่มต้นต่อคนโดยเฉลี่ย
+        let color = "";
+
+        // สุ่มค่า Luck สำหรับแต่ละคน (0.1 ถึง 1.9)
+        let luckFactors = members.map(() => 0.5 + Math.random() * 1.5);
+
+        if (system === 'market') {
+            systemName = "ตลาดเสรี (Free Market)";
+            color = "#27ae60"; // Green
+            // ตลาดเสรี: คนที่มี Luck/Skill สูง จะได้เงินเยอะมาก (Exponential)
+            results = members.map((m, i) => ({
+                name: m,
+                wealth: Math.floor(baseWealth * (luckFactors[i] ** 3)) // รวยกระจุก
+            }));
+        } else if (system === 'command') {
+            systemName = "วางแผนส่วนกลาง (Socialism)";
+            color = "#c0392b"; // Red
+            // วางแผน: เอาทรัพยากรมารวมกัน แล้วหารเท่า
+            let totalProduction = members.reduce((sum, _, i) => sum + (baseWealth * luckFactors[i]), 0);
+            // ประสิทธิภาพลดลงเล็กน้อยจากการขาดแรงจูงใจ (Simulation Gimmick)
+            let sharedWealth = Math.floor((totalProduction * 0.8) / members.length); 
+            results = members.map(m => ({ name: m, wealth: sharedWealth }));
+        } else {
+            systemName = "เศรษฐกิจแบบผสม (Mixed)";
+            color = "#f39c12"; // Orange
+            // ผสม: หาเงินได้ตาม Luck แต่โดนภาษี 30% เอามาหารเฉลี่ยคืนทุกคน
+            let rawWealth = members.map((_, i) => baseWealth * (luckFactors[i] ** 2));
+            let taxPool = 0;
+            let afterTax = rawWealth.map(w => {
+                let tax = w * 0.3; // ภาษี 30%
+                taxPool += tax;
+                return w - tax;
+            });
+            let welfare = taxPool / members.length;
+            results = members.map((m, i) => ({
+                name: m,
+                wealth: Math.floor(afterTax[i] + welfare)
+            }));
+        }
+
+        // --- Apply Crisis (Climax) ---
+        // วิกฤตทำให้ทรัพยากรหายไป และกระทบคนจนหนักกว่าในระบบตลาด
+        const crisisDiv = document.getElementById('crisis-box');
+        crisisDiv.style.display = 'block';
+
+        results = results.map(r => {
+            let damage = 0;
+            if (system === 'market') {
+                // ตลาดเสรี: ไม่มีสวัสดิการ คนจนโดนหนัก (หายไป 50%), คนรวยมีเกราะ (หาย 10%)
+                damage = r.wealth < baseWealth ? 0.5 : 0.1;
+            } else if (system === 'command') {
+                // สังคมนิยม: รัฐช่วยรับความเสี่ยง โดนเท่ากันทุกคน 30%
+                damage = 0.3;
+            } else {
+                // ผสม: มีสวัสดิการช่วยบ้าง โดน 25%
+                damage = 0.25;
+            }
+            return { ...r, wealth: Math.floor(r.wealth * (1 - damage)) };
+        });
+
+        // Sort มากไปน้อย
+        results.sort((a, b) => b.wealth - a.wealth);
+
+        // คำนวณ Stats
+        let totalWealth = results.reduce((sum, r) => sum + r.wealth, 0);
+        let maxWealth = results[0].wealth;
+        
+        // คำนวณ Gini แบบง่าย (High - Low) / Total
+        let gini = ((results[0].wealth - results[results.length-1].wealth) / totalWealth * members.length).toFixed(2);
+        
+        // คำนวณความสุข (ถ้ารวยมากแต่เพื่อนจน ความสุขเฉลี่ยอาจต่ำเพราะความขัดแย้ง, ถ้าเท่าเทียมแต่จนก็ไม่มีความสุข)
+        let happiness = "ปานกลาง";
+        if (gini > 2.0) happiness = "ต่ำ (เกิดความขัดแย้ง)";
+        else if (totalWealth < (baseWealth * members.length * 0.5)) happiness = "ต่ำ (อดอยาก)";
+        else happiness = "สูง";
+
+        // Render ผลลัพธ์
+        document.getElementById('res-group-name').innerText = groupName;
+        document.getElementById('res-system-name').innerText = systemName;
+        document.getElementById('res-total').innerText = totalWealth.toLocaleString();
+        document.getElementById('res-gini').innerText = gini;
+        document.getElementById('res-happiness').innerText = happiness;
+
+        const chartHtml = results.map(r => {
+            let percent = (r.wealth / maxWealth) * 100;
+            return `
+            <div class="bar-container">
+                <div class="name-label">${r.name}</div>
+                <div class="bar-bg">
+                    <div class="bar-fill" style="width: ${percent}%; background-color: ${color};"></div>
+                </div>
+                <div class="wealth-val">${r.wealth}</div>
+            </div>`;
+        }).join('');
+        
+        document.getElementById('chart-area').innerHTML = chartHtml;
+    }
+
+    // --- Export Logic ---
+    function downloadResult() {
+        const resultCard = document.getElementById("result-card");
+        html2canvas(resultCard).then(canvas => {
+            const link = document.createElement("a");
+            document.body.appendChild(link);
+            link.download = `result-${groupName}.png`;
+            link.href = canvas.toDataURL();
+            link.target = '_blank';
+            link.click();
+        });
+    }
+</script>
+
+</body>
+</html>
